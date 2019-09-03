@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- 顶部导航栏 -->
-    <van-nav-bar title="首页" />
+    <van-nav-bar title="首页" fixed />
     <!-- 标签页 -->
-    <van-tabs v-model="active" style="over">
+    <van-tabs v-model="active">
       <van-tab :title="channel.name" v-for="channel in channels" :key="channel.id">
         <!-- 下拉刷新组件 -->
         <van-pull-refresh v-model="channel.isLoading" @refresh="onRefresh">
@@ -41,6 +41,8 @@
           </van-list>
         </van-pull-refresh>
       </van-tab>
+                  <!-- 频道编辑 -->
+                  <chanel-edit />
     </van-tabs>
 
 <!-- 更多操作模块 -->
@@ -49,6 +51,7 @@
 v-model="isShow"
 :article='currentArticle'
 @dislike-success='removearticle'
+@add-blackist-success='onAddBlackListSuccess'
 >
 </more-action>
 
@@ -58,10 +61,12 @@ v-model="isShow"
 import { getDefaultOrUserChannels } from '@/api/channel'
 import { getArticles } from '@/api/articles'
 import MoreAction from './componments/more-active'
+import ChanelEdit from './componments/channel-edit'
 export default {
   name: 'HomeIndex',
   components: {
-    MoreAction
+    MoreAction,
+    ChanelEdit
   },
   data () {
     return {
@@ -161,19 +166,66 @@ export default {
       if (index !== -1) {
         articles.splice(index, 1)
       }
+    },
+    // 拉黑作者
+    onAddBlackListSuccess () {
+      // 遍历每一个频道文章列表，将所有文章作者=被拉黑的作者文章移除
+      // 循环每个频道
+      this.channels.forEach(channel => {
+        // 遍历每个频道的文章
+        const articles = channel.articles
+        for (let i = 0; i < articles.length; i++) {
+          const article = articles[i]
+          if (article.aut_id === this.currentChchannel.aut_id) {
+            // 删除查找到的文章，因为删除之后索引值会改变，所以i--防止循环遗漏
+            articles.splice(i, 1)
+            i--
+          }
+        }
+      })
+      // 关闭弹窗
+      this.isShow = false
     }
-
   }
 }
 </script>
 <style scoped lang='less'>
-  .article-info {
+ // 带有作用域的组件样式
+// 1. 只对当前组件的样式生效
+// 2. 还能依然可以设置子组件根元素的样式
+//    使用根元素的 class
+//    或者自己手动加一个 class
+// 3. 如果你想让样式作用的更深，可以特殊的一个选择器：/deep/
+//    注意：/deep/ 不是 CSS 标准语法，这里是 .vue 文件中一种特殊的规则语言
+
+.van-tabs /deep/ .van-tabs__wrap {
+  position: fixed;
+  top: 46px;
+  z-index: 2;
+  left: 0;
+  right: 15px;
+}
+
+.van-tabs /deep/ .van-tabs__content {
+  margin-top: 90px;
+  margin-bottom: 50px;
+}
+
+.article-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
   .meta span {
     margin-right: 10px;
   }
-  }
+}
 
+.wap-nav {
+  position: sticky;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  opacity: 0.8;
+}
 </style>

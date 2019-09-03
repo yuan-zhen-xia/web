@@ -26,3 +26,20 @@ export const dislikeArticles = channelsId => {
     }
   })
 }
+
+// 文章举报文章
+export const reportArticle = ({
+  articleId,
+  type,
+  remark = null
+}) => {
+  return request({
+    method: 'post',
+    url: '/app/v1_0/article/reports',
+    data: {
+      target: articleId,
+      type,
+      remark
+    }
+  })
+}
